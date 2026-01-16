@@ -21,10 +21,10 @@ function getLogFilePath() {
     // 打包环境：日志文件放在可执行文件同目录下
     const execPath = process.execPath;
     const execDir = path.dirname(execPath);
-    return path.join(execDir, 'orderfood.log');
+    return path.join(execDir, 'app.log');
   } else {
     // 开发环境：日志文件放在项目根目录下
-    return path.join(__dirname, '../orderfood.log');
+    return path.join(__dirname, '../../app.log');
   }
 }
 

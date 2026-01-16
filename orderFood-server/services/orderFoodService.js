@@ -226,8 +226,55 @@ const getPaymentMethods = async () => {
   }
 };
 
+/**
+ * 获取系统设置
+ * @param {string} key - 设置键名（可选，不提供则返回所有设置）
+ * @returns {Promise<Object|string>}
+ */
+const getSettings = async (key = null) => {
+  try {
+    const { Settings } = require('../models');
+    
+    if (key) {
+      // 获取单个设置
+      const setting = await Settings.findOne({
+        where: { key }
+      });
+      
+      if (!setting) {
+        return null;
+      }
+      
+      // 尝试解析 JSON，如果失败则返回原始值
+      try {
+        return JSON.parse(setting.value);
+      } catch (e) {
+        return setting.value;
+      }
+    } else {
+      // 获取所有设置
+      const settings = await Settings.findAll();
+      
+      const result = {};
+      for (const setting of settings) {
+        try {
+          result[setting.key] = JSON.parse(setting.value);
+        } catch (e) {
+          result[setting.key] = setting.value;
+        }
+      }
+      
+      return result;
+    }
+  } catch (error) {
+    logger.error('获取系统设置失败:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   createOrder,
   getMeals,
-  getPaymentMethods
+  getPaymentMethods,
+  getSettings
 };

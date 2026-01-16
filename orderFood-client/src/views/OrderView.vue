@@ -2,7 +2,13 @@
   <div class="order-page">
     <!-- 顶部标题栏 -->
     <div class="header">
-      <h1>自助点餐</h1>
+      <div class="header-content">
+        <div class="store-name" v-if="storeName">{{ storeName }}</div>
+        <h1>{{ currentLanguage === 'zh' ? '自助點餐' : 'Self-Service Ordering' }}</h1>
+      </div>
+      <button class="lang-switch-btn" @click="toggleLanguage">
+        {{ currentLanguage === 'zh' ? 'EN' : '中' }}
+      </button>
     </div>
 
     <!-- 主体内容区 -->
@@ -16,11 +22,13 @@
         >
           <div class="meal-icon">{{ meal.icon }}</div>
           <div class="meal-info">
-            <div class="meal-name">{{ meal.name }}</div>
-            <div class="meal-desc">{{ meal.desc }}</div>
-            <div class="meal-price">¥{{ meal.price }}</div>
+            <div class="meal-name">{{ getMealName(meal) }}</div>
+            <div class="meal-desc">{{ getMealDesc(meal) }}</div>
+            <div class="meal-price">${{ meal.price }}</div>
           </div>
-          <button class="add-btn" @click="addToCart(meal.id, meal.name, meal.price)">+ 加入</button>
+          <button class="add-btn" @click="addToCart(meal.id, getMealName(meal), meal.price)">
+            + {{ currentLanguage === 'zh' ? '選餐' : 'Add' }}
+          </button>
         </div>
       </div>
     </div>
@@ -28,10 +36,11 @@
     <!-- 底部固定购物车 -->
     <div class="cart-section">
       <div class="cart-header">
-        <div class="cart-title">我的购物车</div>
       </div>
       <div class="cart-items">
-        <div class="cart-empty" v-if="cartData.length === 0">暂无商品</div>
+        <div class="cart-empty" v-if="cartData.length === 0">
+          {{ currentLanguage === 'zh' ? '未選餐' : 'No items' }}
+        </div>
         <div 
           v-for="item in cartData" 
           :key="item.id"
@@ -46,36 +55,40 @@
             <span class="cart-item-num">{{ item.quantity }}</span>
             <button class="num-btn" @click="increaseQuantity(item.id)">+</button>
           </div>
-          <div class="cart-item-price">¥{{ (item.price * item.quantity).toFixed(2) }}</div>
-          <button class="delete-btn" @click="removeItem(item.id)" title="删除"></button>
+          <div class="cart-item-price">${{ (item.price * item.quantity).toFixed(2) }}</div>
+          <button class="delete-btn" @click="removeItem(item.id)" title="刪除"></button>
         </div>
       </div>
-      <div class="order-type-selector">
-        <div class="order-type-label">订单类型：</div>
+      <!-- 订单类型选择器 - 暂时隐藏 -->
+      <div class="order-type-selector" v-if="false">
+        <div class="order-type-label">{{ currentLanguage === 'zh' ? '訂單類型：' : 'Order Type:' }}</div>
         <button 
           class="order-type-btn" 
           :class="{ active: orderType === 0 }"
           @click="orderType = 0"
         >
-          堂食
+          {{ currentLanguage === 'zh' ? '堂食' : 'Dine In' }}
         </button>
         <button 
           class="order-type-btn" 
           :class="{ active: orderType === 1 }"
           @click="orderType = 1"
         >
-          外卖
+          {{ currentLanguage === 'zh' ? '外賣' : 'Takeout' }}
         </button>
       </div>
       <div class="checkout-area">
-        <div class="total-price">总计：<span>¥{{ totalPrice.toFixed(2) }}</span></div>
+        <div class="total-price">
+          {{ currentLanguage === 'zh' ? '總計：' : 'Total: ' }}
+          <span>${{ totalPrice.toFixed(2) }}</span>
+        </div>
         <button 
           class="pay-btn" 
           :disabled="cartData.length === 0 || isProcessing"
           @click="handlePayment"
         >
-          <span v-if="!isProcessing">立即付款</span>
-          <span v-else>处理中...</span>
+          <span v-if="!isProcessing">{{ currentLanguage === 'zh' ? '立即付款' : 'Pay Now' }}</span>
+          <span v-else>{{ currentLanguage === 'zh' ? '處理中...' : 'Processing...' }}</span>
         </button>
       </div>
     </div>
@@ -98,7 +111,37 @@ const isProcessing = ref(false);
 const message = ref('');
 const messageType = ref('');
 const isLoadingMeals = ref(false);
-const orderType = ref(0); // 0=堂食, 1=外卖
+const orderType = ref(0); // 0=堂食, 1=外賣
+const currentLanguage = ref('zh'); // 'zh' 或 'en'
+const storeName = ref(''); // 店鋪名稱
+
+// 切换语言
+const toggleLanguage = () => {
+  currentLanguage.value = currentLanguage.value === 'zh' ? 'en' : 'zh';
+  // 更新购物车中的商品名称
+  cartData.value.forEach(item => {
+    const meal = meals.value.find(m => m.id === item.mealId);
+    if (meal) {
+      item.name = getMealName(meal);
+    }
+  });
+};
+
+// 获取菜品名称（根据当前语言）
+const getMealName = (meal) => {
+  if (currentLanguage.value === 'en' && meal.nameEn) {
+    return meal.nameEn;
+  }
+  return meal.name || '';
+};
+
+// 获取菜品描述（根据当前语言）
+const getMealDesc = (meal) => {
+  if (currentLanguage.value === 'en' && meal.descEn) {
+    return meal.descEn;
+  }
+  return meal.desc || '';
+};
 
 // 计算总价
 const totalPrice = computed(() => {
@@ -112,8 +155,16 @@ const addToCart = (id, name, price) => {
   const existingItem = cartData.value.find(item => item.id === id);
   if (existingItem) {
     existingItem.quantity += 1;
+    // 更新名称（如果语言切换了）
+    existingItem.name = name;
   } else {
-    cartData.value.push({ id, name, price, quantity: 1 });
+    cartData.value.push({ 
+      id, 
+      name, 
+      price, 
+      quantity: 1,
+      mealId: id // 保存 mealId 以便语言切换时更新名称
+    });
   }
 };
 
@@ -148,7 +199,7 @@ const increaseQuantity = (id) => {
 // 处理付款
 const handlePayment = async () => {
   if (cartData.value.length === 0) {
-    ElMessage.warning('购物车为空，请先选择套餐');
+    ElMessage.warning(currentLanguage.value === 'zh' ? '購物車為空，請先選擇套餐' : 'Cart is empty, please select a meal');
     return;
   }
 
@@ -165,27 +216,32 @@ const handlePayment = async () => {
         price: item.price
       })),
       totalAmount: totalPrice.value,
-      orderType: orderType.value // 0=堂食, 1=外卖
+      orderType: orderType.value // 0=堂食, 1=外賣
     };
 
     const response = await orderService.create(orderData);
     
     if (response.data && response.data.success) {
-      message.value = '付款成功！正在打印小票...';
+      message.value = currentLanguage.value === 'zh' 
+        ? '付款成功！正在列印小票...' 
+        : 'Payment successful! Printing receipt...';
       messageType.value = 'success';
       
       // 延迟后清空购物车
       setTimeout(() => {
         cartData.value = [];
         message.value = '';
-        ElMessage.success('订单已创建，小票已打印');
+        ElMessage.success(currentLanguage.value === 'zh' 
+          ? '訂單已創建，小票已列印' 
+          : 'Order created, receipt printed');
       }, 2000);
     } else {
-      throw new Error(response.data?.message || '付款失败');
+      throw new Error(response.data?.message || (currentLanguage.value === 'zh' ? '付款失敗' : 'Payment failed'));
     }
   } catch (error) {
     console.error('付款失败:', error);
-    message.value = error.response?.data?.message || error.message || '付款失败，请重试';
+    message.value = error.response?.data?.message || error.message || 
+      (currentLanguage.value === 'zh' ? '付款失敗，請重試' : 'Payment failed, please try again');
     messageType.value = 'error';
     ElMessage.error(message.value);
   } finally {
@@ -201,8 +257,10 @@ const loadMeals = async () => {
     if (response.data && Array.isArray(response.data)) {
       meals.value = response.data.map(meal => ({
         id: meal.id,
-        name: meal.name,
-        desc: meal.desc || '',
+        name: meal.name || meal.name_zh || '',
+        nameEn: meal.nameEn || meal.name_en || '',
+        desc: meal.desc || meal.desc_zh || '',
+        descEn: meal.descEn || meal.desc_en || '',
         price: meal.price,
         icon: meal.icon || '🍽️',
         category: meal.category
@@ -210,19 +268,43 @@ const loadMeals = async () => {
     }
   } catch (error) {
     console.error('加载菜品列表失败:', error);
-    ElMessage.error('加载菜品列表失败，使用默认数据');
+    ElMessage.error(currentLanguage.value === 'zh' 
+      ? '載入菜品列表失敗，使用預設數據' 
+      : 'Failed to load meals, using default data');
     // 如果加载失败，使用默认数据
     meals.value = [
-      { id: 1, name: '一菜套餐', icon: '🍱', desc: '精选一菜', price: 15 },
-      { id: 2, name: '两菜套餐', icon: '🍲', desc: '精选两菜', price: 25 }
+      { id: 1, name: '一菜套餐', icon: '🍱', desc: '精選一菜', price: 15 },
+      { id: 2, name: '兩菜套餐', icon: '🍲', desc: '精選兩菜', price: 25 }
     ];
   } finally {
     isLoadingMeals.value = false;
   }
 };
 
+// 加载店铺名称
+const loadStoreName = async () => {
+  try {
+    const response = await orderService.getSettings({ key: 'store_name' });
+    if (response.data && response.data.success) {
+      const data = response.data.data;
+      // 如果返回的是字符串，直接使用
+      if (typeof data === 'string') {
+        storeName.value = data;
+      } else if (data !== null && data !== undefined) {
+        // 如果是其他类型，尝试转换为字符串
+        storeName.value = String(data);
+      }
+    }
+  } catch (error) {
+    console.error('載入店鋪名稱失敗:', error);
+    // 失败时使用默认值或留空
+    storeName.value = '';
+  }
+};
+
 onMounted(() => {
   loadMeals();
+  loadStoreName();
 });
 </script>
 
@@ -253,11 +335,52 @@ onMounted(() => {
   top: 0;
   z-index: 10;
   flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.store-name {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .header h1 {
   font-size: 28px;
   font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.lang-switch-btn {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.lang-switch-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 /* 主体内容区 */

@@ -11,4 +11,7 @@ router.get('/meals', orderFoodController.getMeals);
 // 获取付款方式列表
 router.get('/payment-methods', orderFoodController.getPaymentMethods);
 
+// 获取系统设置
+router.get('/settings', orderFoodController.getSettings);
+
 module.exports = router;

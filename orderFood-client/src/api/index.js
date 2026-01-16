@@ -14,7 +14,9 @@ export const orderService = {
   // 获取套餐列表
   getMeals: () => api.get('/orderfood/meals'),
   // 获取付款方式列表
-  getPaymentMethods: () => api.get('/orderfood/payment-methods')
+  getPaymentMethods: () => api.get('/orderfood/payment-methods'),
+  // 获取系统设置
+  getSettings: (params) => api.get('/orderfood/settings', { params })
 };
 
 export default {

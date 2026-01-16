@@ -100,8 +100,39 @@ const getPaymentMethods = async (req, res) => {
   }
 };
 
+/**
+ * 获取系统设置
+ */
+const getSettings = async (req, res) => {
+  try {
+    const { key } = req.query;
+    
+    const settings = await orderFoodService.getSettings(key);
+    
+    if (key && settings === null) {
+      return res.status(404).json({ 
+        success: false,
+        message: `设置项 ${key} 不存在` 
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: settings
+    });
+  } catch (error) {
+    logger.error('获取系统设置失败:', error);
+    res.status(500).json({ 
+      success: false,
+      message: '获取系统设置失败', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getMeals,
-  getPaymentMethods
+  getPaymentMethods,
+  getSettings
 };

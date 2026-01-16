@@ -1,0 +1,339 @@
+[2026-01-16T07:48:36.979Z] [INFO ] 收到 SIGINT 信号，正在关闭服务器
+[2026-01-16T07:48:41.729Z] [INFO ] ✓ loadPrinterModules 工具函数加载成功
+[2026-01-16T07:48:41.730Z] [INFO ] ✓ 已加载打印机配置文件: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer.config.json
+[2026-01-16T07:48:41.730Z] [INFO ] ℹ️  打印机配置来源: 配置文件
+[2026-01-16T07:48:41.731Z] [INFO ] ========================================
+[2026-01-16T07:48:41.731Z] [INFO ] 开始初始化打印机服务...
+[2026-01-16T07:48:41.732Z] [INFO ] ========================================
+[2026-01-16T07:48:41.732Z] [INFO ] 调用 loadPrinterModules()...
+[2026-01-16T07:48:41.791Z] [INFO ] loadPrinterModules() 执行完成
+[2026-01-16T07:48:41.791Z] [INFO ] ✓ loadPrinterModules() 返回了模块对象
+[2026-01-16T07:48:41.792Z] [INFO ] 已加载的模块:
+[
+  "ffi-napi",
+  "ref-napi",
+  "ref-struct-napi",
+  "ref-array-napi"
+]
+[2026-01-16T07:48:41.792Z] [INFO ] ✓ ffi-napi 和 ref-napi 加载成功
+[2026-01-16T07:48:41.793Z] [INFO ] ✓ wchar_t 类型定义完成
+[2026-01-16T07:48:41.793Z] [INFO ] DLL 路径: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll
+[2026-01-16T07:48:41.793Z] [INFO ] ✓ DLL 文件存在
+[2026-01-16T07:48:41.796Z] [ERROR] ❌ 打印机 DLL 加载失败:
+错误信息: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+错误堆栈: Error: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+    at new DynamicLibrary (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\dynamic_library.js:51:13)
+    at Object.Library (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\library.js:47:10)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\printerService.js:251:22)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at require (node:internal/modules/helpers:177:18)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\orderFoodService.js:1:24)
+[2026-01-16T07:48:41.997Z] [INFO ] 数据库连接成功
+[2026-01-16T07:48:41.998Z] [INFO ] 数据库中发现 6 个表: meals, payment_methods, orders, order_items, settings, meals_backup
+[2026-01-16T07:48:41.999Z] [INFO ] 发现需要删除的表: meals_backup
+[2026-01-16T07:48:42.015Z] [INFO ] ✓ 已删除表: meals_backup
+[2026-01-16T07:48:42.017Z] [INFO ] 数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步
+[2026-01-16T07:48:42.051Z] [ERROR] 数据库初始化失败:
+错误信息: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+错误堆栈: Error
+    at Database.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:315:28
+    at async SQLiteQueryInterface.changeColumn (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query-interface.js:43:7)
+    at async meals.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\model.js:984:11)
+    at async Sequelize.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async initDatabase (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:43:5)
+    at async startServer (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:64:5)
+[2026-01-16T07:48:42.051Z] [INFO ] ℹ️  打印机功能未启用（DLL未加载或已禁用）
+[2026-01-16T07:48:42.062Z] [INFO ] 服务器启动成功
+{
+  "port": 3002,
+  "localAddresses": [
+    "http://localhost:3002",
+    "http://127.0.0.1:3002"
+  ],
+  "networkAddresses": [
+    "http://10.10.8.70:3002"
+  ]
+}
+[2026-01-16T08:10:20.612Z] [INFO ] 订单已保存到数据库
+{
+  "orderNumber": "OF51020559",
+  "orderId": 2,
+  "itemCount": 2
+}
+[2026-01-16T08:10:20.612Z] [INFO ] 订单创建成功并已打印小票
+{
+  "orderNumber": "OF51020559",
+  "totalAmount": 184,
+  "itemCount": 2
+}
+[2026-01-16T08:12:50.587Z] [INFO ] ✓ loadPrinterModules 工具函数加载成功
+[2026-01-16T08:12:50.588Z] [INFO ] ✓ 已加载打印机配置文件: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer.config.json
+[2026-01-16T08:12:50.589Z] [INFO ] ℹ️  打印机配置来源: 配置文件
+[2026-01-16T08:12:50.589Z] [INFO ] ========================================
+[2026-01-16T08:12:50.590Z] [INFO ] 开始初始化打印机服务...
+[2026-01-16T08:12:50.591Z] [INFO ] ========================================
+[2026-01-16T08:12:50.592Z] [INFO ] 调用 loadPrinterModules()...
+[2026-01-16T08:12:50.665Z] [INFO ] loadPrinterModules() 执行完成
+[2026-01-16T08:12:50.666Z] [INFO ] ✓ loadPrinterModules() 返回了模块对象
+[2026-01-16T08:12:50.667Z] [INFO ] 已加载的模块:
+[
+  "ffi-napi",
+  "ref-napi",
+  "ref-struct-napi",
+  "ref-array-napi"
+]
+[2026-01-16T08:12:50.667Z] [INFO ] ✓ ffi-napi 和 ref-napi 加载成功
+[2026-01-16T08:12:50.668Z] [INFO ] ✓ wchar_t 类型定义完成
+[2026-01-16T08:12:50.668Z] [INFO ] DLL 路径: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll
+[2026-01-16T08:12:50.669Z] [INFO ] ✓ DLL 文件存在
+[2026-01-16T08:12:50.671Z] [ERROR] ❌ 打印机 DLL 加载失败:
+错误信息: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+错误堆栈: Error: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+    at new DynamicLibrary (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\dynamic_library.js:51:13)
+    at Object.Library (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\library.js:47:10)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\printerService.js:251:22)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at require (node:internal/modules/helpers:177:18)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\orderFoodService.js:1:24)
+[2026-01-16T08:12:50.908Z] [INFO ] 数据库连接成功
+[2026-01-16T08:12:50.910Z] [INFO ] 数据库中发现 5 个表: meals, payment_methods, orders, order_items, settings
+[2026-01-16T08:12:50.913Z] [INFO ] 没有需要删除的多余表
+[2026-01-16T08:12:50.915Z] [INFO ] 数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步
+[2026-01-16T08:12:50.953Z] [ERROR] 数据库初始化失败:
+错误信息: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+错误堆栈: Error
+    at Database.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:315:28
+    at async SQLiteQueryInterface.changeColumn (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query-interface.js:43:7)
+    at async meals.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\model.js:984:11)
+    at async Sequelize.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async initDatabase (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:43:5)
+    at async startServer (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:64:5)
+[2026-01-16T08:12:50.954Z] [INFO ] ℹ️  打印机功能未启用（DLL未加载或已禁用）
+[2026-01-16T08:12:50.968Z] [INFO ] 服务器启动成功
+{
+  "port": 3002,
+  "localAddresses": [
+    "http://localhost:3002",
+    "http://127.0.0.1:3002"
+  ],
+  "networkAddresses": [
+    "http://10.10.8.70:3002"
+  ]
+}
+[2026-01-16T08:12:54.521Z] [INFO ] ✓ loadPrinterModules 工具函数加载成功
+[2026-01-16T08:12:54.522Z] [INFO ] ✓ 已加载打印机配置文件: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer.config.json
+[2026-01-16T08:12:54.522Z] [INFO ] ℹ️  打印机配置来源: 配置文件
+[2026-01-16T08:12:54.523Z] [INFO ] ========================================
+[2026-01-16T08:12:54.523Z] [INFO ] 开始初始化打印机服务...
+[2026-01-16T08:12:54.524Z] [INFO ] ========================================
+[2026-01-16T08:12:54.524Z] [INFO ] 调用 loadPrinterModules()...
+[2026-01-16T08:12:54.585Z] [INFO ] loadPrinterModules() 执行完成
+[2026-01-16T08:12:54.585Z] [INFO ] ✓ loadPrinterModules() 返回了模块对象
+[2026-01-16T08:12:54.586Z] [INFO ] 已加载的模块:
+[
+  "ffi-napi",
+  "ref-napi",
+  "ref-struct-napi",
+  "ref-array-napi"
+]
+[2026-01-16T08:12:54.586Z] [INFO ] ✓ ffi-napi 和 ref-napi 加载成功
+[2026-01-16T08:12:54.587Z] [INFO ] ✓ wchar_t 类型定义完成
+[2026-01-16T08:12:54.587Z] [INFO ] DLL 路径: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll
+[2026-01-16T08:12:54.588Z] [INFO ] ✓ DLL 文件存在
+[2026-01-16T08:12:54.590Z] [ERROR] ❌ 打印机 DLL 加载失败:
+错误信息: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+错误堆栈: Error: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+    at new DynamicLibrary (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\dynamic_library.js:51:13)
+    at Object.Library (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\library.js:47:10)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\printerService.js:251:22)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at require (node:internal/modules/helpers:177:18)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\orderFoodService.js:1:24)
+[2026-01-16T08:12:54.807Z] [INFO ] 数据库连接成功
+[2026-01-16T08:12:54.809Z] [INFO ] 数据库中发现 6 个表: meals, payment_methods, orders, order_items, settings, meals_backup
+[2026-01-16T08:12:54.812Z] [INFO ] 发现需要删除的表: meals_backup
+[2026-01-16T08:12:54.835Z] [INFO ] ✓ 已删除表: meals_backup
+[2026-01-16T08:12:54.837Z] [INFO ] 数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步
+[2026-01-16T08:12:54.883Z] [ERROR] 数据库初始化失败:
+错误信息: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+错误堆栈: Error
+    at Database.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:315:28
+    at async SQLiteQueryInterface.changeColumn (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query-interface.js:43:7)
+    at async meals.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\model.js:984:11)
+    at async Sequelize.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async initDatabase (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:43:5)
+    at async startServer (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:64:5)
+[2026-01-16T08:12:54.883Z] [INFO ] ℹ️  打印机功能未启用（DLL未加载或已禁用）
+[2026-01-16T08:12:54.900Z] [INFO ] 服务器启动成功
+{
+  "port": 3002,
+  "localAddresses": [
+    "http://localhost:3002",
+    "http://127.0.0.1:3002"
+  ],
+  "networkAddresses": [
+    "http://10.10.8.70:3002"
+  ]
+}
+[2026-01-16T08:12:55.660Z] [INFO ] ✓ loadPrinterModules 工具函数加载成功
+[2026-01-16T08:12:55.662Z] [INFO ] ✓ 已加载打印机配置文件: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer.config.json
+[2026-01-16T08:12:55.662Z] [INFO ] ℹ️  打印机配置来源: 配置文件
+[2026-01-16T08:12:55.663Z] [INFO ] ========================================
+[2026-01-16T08:12:55.663Z] [INFO ] 开始初始化打印机服务...
+[2026-01-16T08:12:55.663Z] [INFO ] ========================================
+[2026-01-16T08:12:55.664Z] [INFO ] 调用 loadPrinterModules()...
+[2026-01-16T08:12:55.721Z] [INFO ] loadPrinterModules() 执行完成
+[2026-01-16T08:12:55.722Z] [INFO ] ✓ loadPrinterModules() 返回了模块对象
+[2026-01-16T08:12:55.722Z] [INFO ] 已加载的模块:
+[
+  "ffi-napi",
+  "ref-napi",
+  "ref-struct-napi",
+  "ref-array-napi"
+]
+[2026-01-16T08:12:55.722Z] [INFO ] ✓ ffi-napi 和 ref-napi 加载成功
+[2026-01-16T08:12:55.723Z] [INFO ] ✓ wchar_t 类型定义完成
+[2026-01-16T08:12:55.724Z] [INFO ] DLL 路径: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll
+[2026-01-16T08:12:55.724Z] [INFO ] ✓ DLL 文件存在
+[2026-01-16T08:12:55.726Z] [ERROR] ❌ 打印机 DLL 加载失败:
+错误信息: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+错误堆栈: Error: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+    at new DynamicLibrary (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\dynamic_library.js:51:13)
+    at Object.Library (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\library.js:47:10)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\printerService.js:251:22)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at require (node:internal/modules/helpers:177:18)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\orderFoodService.js:1:24)
+[2026-01-16T08:12:55.903Z] [INFO ] 数据库连接成功
+[2026-01-16T08:12:55.904Z] [INFO ] 数据库中发现 6 个表: meals, payment_methods, orders, order_items, settings, meals_backup
+[2026-01-16T08:12:55.906Z] [INFO ] 发现需要删除的表: meals_backup
+[2026-01-16T08:12:55.933Z] [INFO ] ✓ 已删除表: meals_backup
+[2026-01-16T08:12:55.935Z] [INFO ] 数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步
+[2026-01-16T08:12:55.968Z] [ERROR] 数据库初始化失败:
+错误信息: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+错误堆栈: Error
+    at Database.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:315:28
+    at async SQLiteQueryInterface.changeColumn (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query-interface.js:43:7)
+    at async meals.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\model.js:984:11)
+    at async Sequelize.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async initDatabase (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:43:5)
+    at async startServer (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:64:5)
+[2026-01-16T08:12:55.969Z] [INFO ] ℹ️  打印机功能未启用（DLL未加载或已禁用）
+[2026-01-16T08:12:55.982Z] [INFO ] 服务器启动成功
+{
+  "port": 3002,
+  "localAddresses": [
+    "http://localhost:3002",
+    "http://127.0.0.1:3002"
+  ],
+  "networkAddresses": [
+    "http://10.10.8.70:3002"
+  ]
+}
+[2026-01-16T08:14:17.091Z] [INFO ] ✓ loadPrinterModules 工具函数加载成功
+[2026-01-16T08:14:17.092Z] [INFO ] ✓ 已加载打印机配置文件: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer.config.json
+[2026-01-16T08:14:17.094Z] [INFO ] ℹ️  打印机配置来源: 配置文件
+[2026-01-16T08:14:17.095Z] [INFO ] ========================================
+[2026-01-16T08:14:17.095Z] [INFO ] 开始初始化打印机服务...
+[2026-01-16T08:14:17.096Z] [INFO ] ========================================
+[2026-01-16T08:14:17.096Z] [INFO ] 调用 loadPrinterModules()...
+[2026-01-16T08:14:17.168Z] [INFO ] loadPrinterModules() 执行完成
+[2026-01-16T08:14:17.168Z] [INFO ] ✓ loadPrinterModules() 返回了模块对象
+[2026-01-16T08:14:17.169Z] [INFO ] 已加载的模块:
+[
+  "ffi-napi",
+  "ref-napi",
+  "ref-struct-napi",
+  "ref-array-napi"
+]
+[2026-01-16T08:14:17.169Z] [INFO ] ✓ ffi-napi 和 ref-napi 加载成功
+[2026-01-16T08:14:17.170Z] [INFO ] ✓ wchar_t 类型定义完成
+[2026-01-16T08:14:17.171Z] [INFO ] DLL 路径: C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll
+[2026-01-16T08:14:17.172Z] [INFO ] ✓ DLL 文件存在
+[2026-01-16T08:14:17.174Z] [ERROR] ❌ 打印机 DLL 加载失败:
+错误信息: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+错误堆栈: Error: Dynamic Linking Error: Failed to load library "C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\printer_sdk\CsnPrinterLibs.dll". The error message could not be retrieved (dlerror returned null). This may indicate: 1) The DLL file is missing or inaccessible, 2) The DLL architecture (32/64-bit) does not match the Node.js process, 3) Required dependencies are missing, or 4) The DLL path is incorrect.
+    at new DynamicLibrary (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\dynamic_library.js:51:13)
+    at Object.Library (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\ffi-napi\lib\library.js:47:10)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\printerService.js:251:22)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at require (node:internal/modules/helpers:177:18)
+    at Object.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\services\orderFoodService.js:1:24)
+[2026-01-16T08:14:17.391Z] [INFO ] 数据库连接成功
+[2026-01-16T08:14:17.392Z] [INFO ] 数据库中发现 6 个表: meals, payment_methods, orders, order_items, settings, meals_backup
+[2026-01-16T08:14:17.395Z] [INFO ] 发现需要删除的表: meals_backup
+[2026-01-16T08:14:17.409Z] [INFO ] ✓ 已删除表: meals_backup
+[2026-01-16T08:14:17.411Z] [INFO ] 数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步
+[2026-01-16T08:14:17.449Z] [ERROR] 数据库初始化失败:
+错误信息: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+错误堆栈: Error
+    at Database.<anonymous> (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:315:28
+    at async SQLiteQueryInterface.changeColumn (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\dialects\sqlite\query-interface.js:43:7)
+    at async meals.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\model.js:984:11)
+    at async Sequelize.sync (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async initDatabase (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:43:5)
+    at async startServer (C:\Users\momo0\Documents\CursorProjects\orderFood-system\orderFood-server\index.js:64:5)
+[2026-01-16T08:14:17.450Z] [INFO ] ℹ️  打印机功能未启用（DLL未加载或已禁用）
+[2026-01-16T08:14:17.466Z] [INFO ] 服务器启动成功
+{
+  "port": 3002,
+  "localAddresses": [
+    "http://localhost:3002",
+    "http://127.0.0.1:3002"
+  ],
+  "networkAddresses": [
+    "http://10.10.8.70:3002"
+  ]
+}
+[2026-01-16T08:37:45.226Z] [INFO ] 订单已保存到数据库
+{
+  "orderNumber": "OF52665172",
+  "orderId": 3,
+  "itemCount": 2
+}
+[2026-01-16T08:37:45.226Z] [INFO ] 订单创建成功并已打印小票
+{
+  "orderNumber": "OF52665172",
+  "totalAmount": 112,
+  "itemCount": 2
+}
