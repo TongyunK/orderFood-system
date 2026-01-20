@@ -69,11 +69,6 @@
         {{ currentLanguage === 'zh' ? '返回' : 'Back' }}
       </button>
     </div>
-
-    <!-- 提示信息 -->
-    <div v-if="message" class="message" :class="messageType">
-      {{ message }}
-    </div>
   </div>
 </template>
 
@@ -98,9 +93,6 @@ const paymentMethods = ref([]);
 const orderItems = ref([]);
 const totalAmount = ref(0);
 const orderType = ref(0);
-const isProcessing = ref(false);
-const message = ref('');
-const messageType = ref('');
 const currentLanguage = ref('zh');
 const storeName = ref('');
 
@@ -213,60 +205,27 @@ const loadStoreName = async () => {
 };
 
 // 选择付款方式
-const selectPaymentMethod = async (method) => {
-  if (isProcessing.value) return;
-
-  isProcessing.value = true;
-  message.value = '';
-  messageType.value = '';
-
-  try {
-    // 构建订单数据
-    const orderData = {
-      items: orderItems.value.map(item => ({
-        mealId: item.id,
-        quantity: item.quantity,
-        price: item.price
-      })),
+const selectPaymentMethod = (method) => {
+  console.log('选择付款方式:', method);
+  console.log('订单数据:', {
+    items: orderItems.value,
+    totalAmount: totalAmount.value,
+    orderType: orderType.value
+  });
+  
+  // 跳转到付款指示页面
+  router.push({
+    path: '/payment-instruction',
+    query: {
+      items: encodeURIComponent(JSON.stringify(orderItems.value)),
       totalAmount: totalAmount.value,
       orderType: orderType.value,
-      paymentMethodId: method.id
-    };
-
-    const response = await orderService.create(orderData);
-    
-    if (response.data && response.data.success) {
-      message.value = currentLanguage.value === 'zh' 
-        ? '付款成功！正在列印小票...' 
-        : 'Payment successful! Printing receipt...';
-      messageType.value = 'success';
-      
-      // 清空购物车数据（订单创建成功后）
-      try {
-        localStorage.removeItem('order_cart_data');
-      } catch (error) {
-        console.warn('清空购物车数据失败:', error);
-      }
-      
-      // 延迟后返回订单页面
-      setTimeout(() => {
-        ElMessage.success(currentLanguage.value === 'zh' 
-          ? '訂單已創建，小票已列印' 
-          : 'Order created, receipt printed');
-        router.push('/order');
-      }, 2000);
-    } else {
-      throw new Error(response.data?.message || (currentLanguage.value === 'zh' ? '付款失敗' : 'Payment failed'));
+      paymentMethod: encodeURIComponent(JSON.stringify(method)),
+      language: currentLanguage.value
     }
-  } catch (error) {
-    console.error('付款失败:', error);
-    message.value = error.response?.data?.message || error.message || 
-      (currentLanguage.value === 'zh' ? '付款失敗，請重試' : 'Payment failed, please try again');
-    messageType.value = 'error';
-    ElMessage.error(message.value);
-  } finally {
-    isProcessing.value = false;
-  }
+  }).catch(err => {
+    console.error('路由跳转失败:', err);
+  });
 };
 
 // 返回订单页面
@@ -512,41 +471,4 @@ const goBack = () => {
   transform: scale(0.98);
 }
 
-/* 提示信息 */
-.message {
-  position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 15px 25px;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 16px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-.message.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.message.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
 </style>

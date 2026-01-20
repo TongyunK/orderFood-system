@@ -14,6 +14,11 @@ const routes = [
     path: '/payment',
     name: 'payment',
     component: () => import('../views/PaymentMethodView.vue')
+  },
+  {
+    path: '/payment-instruction',
+    name: 'payment-instruction',
+    component: () => import('../views/PaymentInstructionView.vue')
   }
 ];
 
