@@ -87,7 +87,7 @@ async function initDatabase() {
     
     // 先执行数据库迁移（如果需要）
     try {
-      logger.info('开始数据库迁移...');
+      // logger.info('开始数据库迁移...');
       await migrateDatabase();
       logger.info('✓ 数据库迁移完成');
     } catch (migrateError) {
@@ -147,7 +147,7 @@ async function initDatabase() {
           }
         }
       } else {
-        logger.info('所有必需表都存在，跳过 sync 操作', null, true);
+        // logger.info('所有必需表都存在，跳过 sync 操作', null, true);
       }
     } catch (error) {
       logger.warn('表结构检查失败:', error.message);
@@ -156,19 +156,19 @@ async function initDatabase() {
     logger.info('数据库表结构同步成功', null, true);
     
     // 初始化默认菜品数据
-    logger.info('开始初始化默认菜品数据...');
+    // logger.info('开始初始化默认菜品数据...');
     await initMeals();
-    logger.info('✓ 默认菜品数据初始化完成');
+    // logger.info('✓ 默认菜品数据初始化完成');
     
     // 初始化系统设置
-    logger.info('开始初始化系统设置...');
+    // logger.info('开始初始化系统设置...');
     await initSettings();
-    logger.info('✓ 系统设置初始化完成');
+    // logger.info('✓ 系统设置初始化完成');
     
     // 初始化付款方式数据
-    logger.info('开始初始化付款方式数据...');
+    // logger.info('开始初始化付款方式数据...');
     await initPaymentMethods();
-    logger.info('✓ 付款方式数据初始化完成');
+    // logger.info('✓ 付款方式数据初始化完成');
     
     logger.info('✓ 数据库初始化完成', null, true);
   } catch (error) {

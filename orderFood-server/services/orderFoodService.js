@@ -306,46 +306,62 @@ const createOrder = async (orderData) => {
         payment_type_en: paymentMethod ? (paymentMethod.name_en || '') : ''
       };
       
-      // 调用打印机服务打印小票
-      const printResult = await printerService.printOrderReceipt(printData);
-      
-      // 更新订单的打印状态
-      await order.update({
-        print_status: printResult.success ? 'success' : 'error',
-        print_message: printResult.message
-      });
-      
+      // 先返回订单创建成功，然后异步打印小票（避免打印阻塞导致超时）
       logger.info('订单已保存到数据库', { 
         orderNumber,
         orderId: order.id,
         itemCount: orderItems.length
       });
       
-      if (printResult.success) {
-        logger.info('订单创建成功并已打印小票', {
-          orderNumber,
-          totalAmount,
-          itemCount: orderItems.length
-        });
-        
-        return {
-          success: true,
-          message: '订单创建成功，小票已打印',
-          orderNumber: orderNumber
-        };
-      } else {
-        logger.warn('订单创建成功，但打印失败', {
-          orderNumber,
-          totalAmount,
-          printError: printResult.message
-        });
-        
-        return {
-          success: true,
-          message: `订单创建成功，但打印失败: ${printResult.message}`,
-          orderNumber: orderNumber
-        };
-      }
+      // 异步打印小票（不阻塞响应）
+      setImmediate(async () => {
+        try {
+          const printResult = await printerService.printOrderReceipt(printData);
+          
+          // 更新订单的打印状态
+          await order.update({
+            print_status: printResult.success ? 'success' : 'error',
+            print_message: printResult.message
+          });
+          
+          if (printResult.success) {
+            logger.info('订单小票打印成功', {
+              orderNumber,
+              totalAmount,
+              itemCount: orderItems.length
+            });
+          } else {
+            logger.warn('订单小票打印失败', {
+              orderNumber,
+              totalAmount,
+              printError: printResult.message
+            });
+          }
+        } catch (printError) {
+          logger.error('打印订单小票时发生错误', {
+            orderNumber,
+            error: printError.message,
+            stack: printError.stack
+          });
+          
+          // 更新订单的打印状态为错误
+          try {
+            await order.update({
+              print_status: 'error',
+              print_message: `打印错误: ${printError.message}`
+            });
+          } catch (updateError) {
+            logger.error('更新订单打印状态失败', updateError);
+          }
+        }
+      });
+      
+      // 立即返回订单创建成功
+      return {
+        success: true,
+        message: '订单创建成功，正在打印小票...',
+        orderNumber: orderNumber
+      };
     } catch (error) {
       // 回滚事务
       await transaction.rollback();

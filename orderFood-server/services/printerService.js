@@ -458,256 +458,6 @@ async function initPrinter() {
   }
 }
 
-/**
- * 打印票号
- * @param {Object} ticketData - 票号数据
- * @param {string} ticketData.ticket_number - 票号
- * @param {string} ticketData.business_type_name - 业务类型名称
- * @param {string} ticketData.business_type_english_name - 业务类型英文名称（可选）
- * @param {number} ticketData.waiting_count - 等待人数
- * @returns {Promise<{success: boolean, message: string}>} 打印结果
- */
-async function printTicket(ticketData) {
-  const { ticket_number, business_type_name, business_type_english_name, waiting_count } = ticketData;
-  
-  // 如果 DLL 未加载，返回模拟结果
-  if (!printerDll) {
-    printerLogger.debug('模拟打印（DLL未加载）', {
-      ticket_number,
-      business_type_name,
-      business_type_english_name,
-      waiting_count
-    });
-    return {
-      success: true,
-      message: '模拟打印成功（DLL未加载）'
-    };
-  }
-  
-  try {
-    // 确保端口已打开
-    if (!printerHandle) {
-      const opened = await openPort();
-      if (!opened) {
-        return {
-          success: false,
-          message: '無法打開打印機，請檢查打印機連接'
-        };
-      }
-    }
-    
-    // 打印前检查打印机状态（包括纸张状态）
-    // 注意：根据 DLL 文档，不应在打印过程中查询，所以只在打印前查询一次
-    // 现场柜台通常不需要强依赖状态查询，因此提供可配置开关 PRINTER_CONFIG.checkStatus
-    if (PRINTER_CONFIG.checkStatus) {
-      try {
-        const statusBefore = await queryPrinterStatus();
-        if (statusBefore.error === -3) {
-          printerLogger.warn('打印前检测到缺纸', { status: statusBefore });
-          return {
-            success: false,
-            message: '打印機缺紙，請添加紙張後重試'
-          };
-        } else if (statusBefore.error === -1) {
-          printerLogger.warn('打印前检测到打印机脱机', { status: statusBefore });
-          return {
-            success: false,
-            message: '打印機離線，請檢查打印機連接'
-          };
-        } else if (statusBefore.error === -2) {
-          printerLogger.warn('打印前检测到上盖打开', { status: statusBefore });
-          return {
-            success: false,
-            message: '打印機上蓋打開，請關閉上蓋後重試'
-          };
-        } else if (statusBefore.error !== 1) {
-          printerLogger.warn('打印前检测到打印机异常', { status: statusBefore });
-          // 其他错误（如切刀异常、温度过高等）不阻止打印，但记录警告
-        }
-      } catch (statusError) {
-        // 查询状态失败不影响打印，只记录日志
-        printerLogger.debug('打印前状态查询失败，继续打印', { error: statusError.message });
-      }
-    }
-    
-    // 准备打印内容（参考 BusinessTypeSelector.vue 弹窗格式）
-    const date = new Date();
-    // 格式化为：2025-11-26 12:54:35
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    const dateTimeStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    
-    // 繁体中文编码：根据 C++ 示例，繁体中文总是使用 nLan=3 (BIG-5)
-    // 无论配置的编码是什么，繁体中文都使用 BIG-5 编码（nLan=3）
-    const TRADITIONAL_CHINESE_ENCODING = 3; // 繁体中文固定使用 BIG-5
-    
-    // 打印内容布局（与取票成功弹窗一致）
-    // 参数：文本, 编码(0=GBK, 1=UTF-8, 3=BIG-5), 位置(-2=居中), 宽度倍数, 高度倍数, 字体类型(0=12*24), 字体样式(0=正常)
-    // 使用配置的文本编码，如果未配置则默认使用 GBK (0)
-    const TEXT_ENCODING = PRINTER_CONFIG.textEncoding !== undefined ? PRINTER_CONFIG.textEncoding : 0;
-    
-    // 编码说明：
-    // 0 = GBK（简体中文，大多数POS打印机默认支持）- 使用 UTF-16LE 宽字符编码
-    // 1 = UTF-8（通用编码，支持多语言）- 使用 UTF-16LE 宽字符编码
-    // 3 = BIG-5（繁体中文专用）- 使用 ANSI 多字节编码（BIG-5 Buffer），直接传递，不转 UTF-16LE
-    
-    printerLogger.debug(`使用文本编码: ${TEXT_ENCODING} (${TEXT_ENCODING === 0 ? 'GBK' : TEXT_ENCODING === 1 ? 'UTF-8' : TEXT_ENCODING === 3 ? 'BIG-5' : '未知'})`);
-    
-    // 1. 居中对齐
-    printerDll.Pos_Align(1); // 1 = 居中对齐
-    
-    // 2. 打印标题（繁体中文 + 英文，参考弹窗）
-    // 繁体中文：您已成功獲取【業務類型】服務號碼
-    const titleZh = `您已成功獲取【${business_type_name}】服務號碼`;
-    printText(titleZh, TRADITIONAL_CHINESE_ENCODING, -2, 1, 1, 0, 0x08); // 使用繁体中文编码，加粗
-    printerDll.Pos_FeedLine();
-    
-    // 英文：You have successfully obtained a [Service Type] service number
-    // 注意：英文文本使用英文括号 []，因为打印机不支持英文中的【】
-    const titleEn = business_type_english_name 
-      ? `You have successfully obtained a [${business_type_english_name}] service number`
-      : `You have successfully obtained a service number`;
-    printText(titleEn, TEXT_ENCODING, -2, 1, 1, 0, 0); // 使用配置的编码，缩小字号
-    printerDll.Pos_FeedLine();
-    printerDll.Pos_FeedLine(); // 额外换行
-    
-    // 3. 打印票号标签（繁体中文 + 英文）
-    // 繁体中文：您的號碼
-    printText('您的號碼', TRADITIONAL_CHINESE_ENCODING, -2, 1, 1, 0, 0); // 使用繁体中文编码
-    printerDll.Pos_FeedLine();
-    // 英文：Your Number
-    printText('Your Number', TEXT_ENCODING, -2, 1, 1, 0, 0); // 使用配置的编码
-    printerDll.Pos_FeedLine();
-    
-    // 4. 打印票号（超大字体，加粗）
-    printText(ticket_number, TEXT_ENCODING, -2, 3, 3, 0, 0x08); // 3倍宽高，加粗，使用配置的编码
-    printerDll.Pos_FeedLine();
-    printerDll.Pos_FeedLine(); // 额外换行
-    
-    // 5. 打印等待人数（繁体中文 + 英文）
-    // 繁体中文：前面等待人數
-    printText('前面等待人數', TRADITIONAL_CHINESE_ENCODING, -2, 1, 1, 0, 0); // 使用繁体中文编码
-    printerDll.Pos_FeedLine();
-    // 英文：People Waiting
-    printText('People Waiting', TEXT_ENCODING, -2, 1, 1, 0, 0); // 使用配置的编码
-    printerDll.Pos_FeedLine();
-    
-    // 6. 打印等待人数数值（大字体）
-    printText(`${waiting_count}`, TEXT_ENCODING, -2, 2, 2, 0, 0x08); // 2倍宽高，加粗，使用配置的编码
-    printerDll.Pos_FeedLine();
-    printerDll.Pos_FeedLine(); // 额外换行
-    
-    // 7. 打印分隔线
-    printText('------------------------', TEXT_ENCODING, -1, 1, 1, 0, 0); // 使用配置的编码
-    printerDll.Pos_FeedLine();
-    
-    // 8. 打印日期时间（可选，左对齐）
-    printerDll.Pos_Align(1); // 左对齐
-    printText(dateTimeStr, TEXT_ENCODING, -2, 1, 1, 0, 0); // 格式：2025-11-26 12:54:35
-    printerDll.Pos_FeedLine();
-    
-    // 9. 打印提示信息（居中对齐）
-    printerDll.Pos_Align(1); // 居中对齐
-    printerDll.Pos_FeedLine();
-    // 繁体中文：請妥善保管您的票號
-    printText('請妥善保管您的票號', TRADITIONAL_CHINESE_ENCODING, -2, 1, 1, 0, 0); // 使用繁体中文编码
-    printerDll.Pos_FeedLine();
-    // 英文：Please keep your ticket safe
-    printText('Please keep your ticket safe', TEXT_ENCODING, -2, 1, 1, 0, 0); // 使用配置的编码，缩小字号
-    printerDll.Pos_FeedLine();
-    
-    // 10. 进纸（切纸前留出空间）
-    printerDll.Pos_Feed_N_Line(4);
-    
-    // 11. 切纸（如果有切刀功能）
-    try {
-      printerDll.Pos_FullCutPaper();
-    } catch (error) {
-      // 如果没有切刀功能，忽略错误
-      printerLogger.debug('打印机可能没有切刀功能', { error: error.message });
-    }
-    
-    // 12. 再进纸一行
-    printerDll.Pos_FeedLine();
-    
-    // 打印后检查打印机状态（检测是否在打印过程中出现缺纸等问题）
-    // 注意：根据 DLL 文档，不应在打印过程中查询，所以只在打印完成后查询一次
-    let printStatus = '成功';
-    if (PRINTER_CONFIG.checkStatus) {
-      try {
-        // 等待一小段时间，让打印机完成打印操作
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const statusAfter = await queryPrinterStatus();
-        if (statusAfter.error === -3) {
-          printStatus = '可能缺纸';
-          printerLogger.warn('打印后检测到缺纸，打印可能不完整', { 
-            status: statusAfter,
-            ticket_number 
-          });
-        } else if (statusAfter.error !== 1) {
-          printerLogger.warn('打印后检测到打印机异常', { 
-            status: statusAfter,
-            ticket_number 
-          });
-        }
-      } catch (statusError) {
-        // 查询状态失败不影响返回结果，只记录日志
-        printerLogger.debug('打印后状态查询失败', { error: statusError.message });
-      }
-    }
-    
-    // 打印成功日志改为 DEBUG 级别，减少日志文件占用空间
-    // 如果需要调试，可以通过环境变量启用 DEBUG 日志
-    printerLogger.debug('打印完成', {
-      ticket_number,
-      business_type_name,
-      business_type_english_name: business_type_english_name || '(无英文名称)',
-      waiting_count,
-      dateTime: dateTimeStr,
-      status: printStatus
-    });
-    
-    // 只在打印状态异常时记录 WARN 级别日志
-    if (printStatus !== '成功') {
-      printerLogger.warn('打印完成但状态异常', {
-        ticket_number,
-        business_type_name,
-        dateTime: dateTimeStr,
-        status: printStatus
-      });
-    }
-    
-    if (printStatus === '可能缺纸') {
-      return {
-        success: false,
-        message: '打印可能不完整：檢測到缺紙，請檢查打印結果'
-      };
-    }
-    
-    return {
-      success: true,
-      message: '打印成功'
-    };
-    
-  } catch (error) {
-    printerLogger.error('打印失败', {
-      error: error.message,
-      stack: error.stack,
-      ticket_number,
-      business_type_name,
-      waiting_count
-    });
-    return {
-      success: false,
-      message: `打印失敗: ${error.message}`
-    };
-  }
-}
 
 /**
  * 打印订单小票
@@ -797,112 +547,270 @@ async function printOrderReceipt(orderData) {
     const TRADITIONAL_CHINESE_ENCODING = 3; // 繁体中文固定使用 BIG-5
     const TEXT_ENCODING = PRINTER_CONFIG.textEncoding !== undefined ? PRINTER_CONFIG.textEncoding : 0;
     
-    // 1. 打印店铺名称（居中）
+    // 定义字号倍数：表格区域、时间、交易号等使用0.9倍，序号数字使用1.5倍
+    const NORMAL_SIZE = 0.9; // 表格/时间/交易号等区域的字号倍数
+    const SEQ_NUMBER_SIZE = 1.0; // 序号数字字号倍数
+    
+    // 纸张宽度限制：80mm热敏打印机（POS80）标准字体约48个ASCII字符/行
+    // 使用1.0倍字号时，最大行宽约48个字符
+    const MAX_LINE_WIDTH = 48; // 最大行宽（ASCII字符数）
+    
+    // 分隔线长度：一行48个"-"（固定长度）
+    const SEPARATOR_LENGTH = 48;
+    const SEPARATOR_LINE = '-'.repeat(SEPARATOR_LENGTH); // 生成分隔线
+    
+    // 文本截断函数，确保不超过指定宽度
+    const truncateText = (text, maxWidth) => {
+      if (!text) return '';
+      const str = String(text);
+      // 简单截断：如果超过最大宽度，截断并添加省略号
+      if (str.length > maxWidth) {
+        return str.substring(0, maxWidth - 1) + '…';
+      }
+      return str;
+    };
+    
+    // 1. 打印店铺名称（中英文同一行，居中，0.9倍字号）
     printerDll.Pos_Align(1);
-    if (store_name_zh) {
-      printText(store_name_zh, TRADITIONAL_CHINESE_ENCODING, -2, 1, 1, 0, 0x08);
+    let storeNameLine = '';
+    if (store_name_zh && store_name_en) {
+      // 中英文都有，用 " - " 连接
+      storeNameLine = `${store_name_zh} - ${store_name_en}`;
+    } else if (store_name_zh) {
+      // 只有中文
+      storeNameLine = store_name_zh;
+    } else if (store_name_en) {
+      // 只有英文
+      storeNameLine = store_name_en;
+    }
+    
+    if (storeNameLine) {
+      // 使用繁体中文编码打印整行（包含中英文）
+      printText(storeNameLine, TRADITIONAL_CHINESE_ENCODING, -2, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
       printerDll.Pos_FeedLine();
     }
-    if (store_name_en) {
-      printText(store_name_en, TEXT_ENCODING, -2, 1, 1, 0, 0);
-      printerDll.Pos_FeedLine();
-    }
+    
+    // 打印"您的號碼(Your number)"行（居中，使用更小字号）
+    const ticketNumberLabel = '***您的號碼(Your number)***';
+    printText(ticketNumberLabel, TRADITIONAL_CHINESE_ENCODING, -2, 0.7, 0.7, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 2. 打印分隔线
+    // 打印订单号码（居中，1.5倍字号）
+    // 格式：堂食=D，外卖=T，后跟4位序号（不足补0）
+    if (daily_sequence !== undefined && daily_sequence !== null) {
+      const orderTypeCode = order_type === 1 ? 'T' : 'D'; // 1=外卖=T，0=堂食=D
+      const sequenceStr = String(daily_sequence).padStart(4, '0'); // 4位序号，不足补0
+      const orderNumber = `${orderTypeCode}${sequenceStr}`; // 例如：D0007, T0007
+      printText(orderNumber, TEXT_ENCODING, -2, SEQ_NUMBER_SIZE, SEQ_NUMBER_SIZE, 0, 0x08); // 1.5倍字号，加粗
+      printerDll.Pos_FeedLine();
+    }
+    
+    // 2. 打印分隔线（根据字号倍数动态计算长度，占满一行）
     printerDll.Pos_Align(0);
-    printText('------------------------------------------------------------', TEXT_ENCODING, -1, 1, 1, 0, 0);
+    printText(SEPARATOR_LINE, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 3. 打印序号、类型、时间、交易号
-    const seqText = daily_sequence !== undefined && daily_sequence !== null
-      ? String(daily_sequence)
-      : '';
-    if (seqText) {
-      printText(`序號： ${seqText}`, TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
-      printerDll.Pos_FeedLine();
+    // 3. 打印店号、类型、时间、交易号（序号已在店铺名称下方显示，此处不再重复）
+    // 获取店铺号码（从订单编号中提取，或使用默认值001）
+    let storeNumber = '001';
+    if (order_number && order_number.length >= 4) {
+      // 订单编号格式：D001... 或 T001...，第2-4位是店铺号码
+      storeNumber = order_number.substring(1, 4);
     }
     
+    // 打印店号
+    printText(`店號(Store No)：${storeNumber}`, TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
+    printerDll.Pos_FeedLine();
+    
+    // 打印类型
     const typeTextZh = order_type === 1 ? '外賣' : '堂食';
-    printText(`類型：${typeTextZh}`, TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
+    printText(`類型(Type)：${typeTextZh}`, TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    printText(`交易時間(Time): ${order_time}`, TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
+    // 确保交易时间和交易号不超过最大宽度
+    const timeLine = `交易時間(Time): ${order_time}`;
+    printText(truncateText(timeLine, MAX_LINE_WIDTH), TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    printText(`交易號(TN): ${order_number}`, TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
+    const orderNumLine = `交易號(TN): ${order_number}`;
+    printText(truncateText(orderNumLine, MAX_LINE_WIDTH), TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 4. 分隔线
-    printText('------------------------------------------------------------', TEXT_ENCODING, -1, 1, 1, 0, 0);
+    // 4. 分隔线（根据字号倍数动态计算长度，占满一行）
+    printText(SEPARATOR_LINE, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 5. 打印表头
-    printText('     品項                數量                單價               小計', TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
-    printerDll.Pos_FeedLine();
-    printText('    Item               Qty             Unit Price      Amount', TEXT_ENCODING, -1, 1, 1, 0, 0);
+    // 5. 打印表头（使用列位置记录方式，确保对齐）
+    // 80mm热敏打印机限制：标准字体约48字符/行，0.9倍字号约53字符/行
+    // 定义列宽（ASCII字符数）
+    // 16 + 8 + 10 + 14 = 48
+    const COL_WIDTH_NAME = 16;  // 品項/Item 列宽
+    const COL_WIDTH_QTY = 8;    // 數量/Qty 列宽
+    const COL_WIDTH_PRICE = 10; // 單價/Unit Price 列宽
+    const COL_WIDTH_AMOUNT = 14; // 小計/Amount 列宽
+    
+    // 计算每列的起始位置（基于ASCII字符位置）
+    const COL_POS_NAME = 0;                    // 品項列起始位置（左对齐，从0开始）
+    const COL_POS_QTY = COL_WIDTH_NAME;        // 數量列起始位置
+    const COL_POS_PRICE = COL_POS_QTY + COL_WIDTH_QTY;    // 單價列起始位置
+    const COL_POS_AMOUNT = COL_POS_PRICE + COL_WIDTH_PRICE; // 小計列起始位置
+    
+    // 计算文本的实际显示宽度（考虑中文字符占2个ASCII字符）
+    const getDisplayWidth = (text) => {
+      let width = 0;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        // 判断是否为中文字符（包括繁体中文）
+        if (/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/.test(char)) {
+          width += 2; // 中文字符占2个ASCII字符宽度
+        } else {
+          width += 1; // 英文字符占1个ASCII字符宽度
+        }
+      }
+      return width;
+    };
+    
+    // 左对齐格式化（考虑中文字符宽度）
+    const leftAlign = (text, targetWidth) => {
+      const displayWidth = getDisplayWidth(text);
+      const padding = Math.max(0, targetWidth - displayWidth);
+      return text + ' '.repeat(padding);
+    };
+    
+    // 居中对齐格式化（考虑中文字符宽度）
+    const centerAlign = (text, targetWidth) => {
+      const displayWidth = getDisplayWidth(text);
+      const totalPadding = Math.max(0, targetWidth - displayWidth);
+      const leftPadding = Math.floor(totalPadding / 2);
+      const rightPadding = totalPadding - leftPadding;
+      return ' '.repeat(leftPadding) + text + ' '.repeat(rightPadding);
+    };
+    
+    // 右对齐格式化（考虑中文字符宽度）
+    const rightAlign = (text, targetWidth) => {
+      const displayWidth = getDisplayWidth(text);
+      const padding = Math.max(0, targetWidth - displayWidth);
+      return ' '.repeat(padding) + text;
+    };
+    
+    // 构建表头/数据行：使用固定位置拼接
+    const buildTableRow = (name, qty, price, amount, nameAlignCenter = false) => {
+      // 需要居中时第一列居中，否则左对齐
+      const namePart = nameAlignCenter ? centerAlign(name, COL_WIDTH_NAME) : leftAlign(name, COL_WIDTH_NAME);
+      const qtyPart = centerAlign(qty, COL_WIDTH_QTY);
+      const pricePart = centerAlign(price, COL_WIDTH_PRICE);
+      const amountPart = centerAlign(amount, COL_WIDTH_AMOUNT);
+      return namePart + qtyPart + pricePart + amountPart;
+    };
+    
+    // 中文表头（第一列左对齐，加粗；去掉实际打印中的左侧缩进）
+    const headerZh = buildTableRow('品項', '數量', '單價', '小計', false);
+    printText(headerZh, TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0x08);
     printerDll.Pos_FeedLine();
     
-    // 6. 打印订单明细
+    // 英文表头（第一列左对齐，加粗）
+    const headerEn = buildTableRow('Item', 'Qty', 'Unit Price', 'Amount', false);
+    printText(headerEn, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0x08);
+    printerDll.Pos_FeedLine();
+    
+    // 6. 打印订单明细（使用相同的格式化函数确保对齐，第一列左对齐）
     if (items && Array.isArray(items) && items.length > 0) {
       items.forEach((item) => {
-        const nameCol = String(item.name || '').padEnd(16, ' ');
-        const qtyCol = String(item.quantity).padStart(4, ' ');
-        const priceCol = String(item.price).padStart(10, ' ');
-        const amountCol = String(item.subtotal).padStart(10, ' ');
-        const line = `${nameCol}${qtyCol}${priceCol}${amountCol}`;
-        printText(line, TEXT_ENCODING, -1, 1, 1, 0, 0);
+        // 确保菜品名称不超过列宽
+        const itemName = truncateText(item.name || '', COL_WIDTH_NAME);
+        const itemRow = buildTableRow(
+          itemName,
+          String(item.quantity),
+          String(item.price),
+          String(item.subtotal),
+          false // 数据行第一列左对齐
+        );
+        printText(itemRow, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
         printerDll.Pos_FeedLine();
       });
       printerDll.Pos_FeedLine();
     }
     
-    // 7. 打印合计
+    // 7. 打印合计前的分隔线
+    printText(SEPARATOR_LINE, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
+    printerDll.Pos_FeedLine();
+    
+    // 8. 打印合计（使用相同的格式化函数确保对齐，第一列左对齐）
     const qtyTotal = total_quantity !== undefined && total_quantity !== null
       ? total_quantity
       : (items || []).reduce((sum, it) => sum + (it.quantity || 0), 0);
-    const totalLine = `合計 total            ${qtyTotal}                                         $${total_amount}`;
-    printText(totalLine, TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0x08);
+    const totalRow = buildTableRow(
+      '合計 Total',
+      String(qtyTotal),
+      '',  // 单价列留空
+      `HK$${total_amount}`,
+      false // 合计行第一列左对齐
+    );
+    printText(totalRow, TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0x08);
     printerDll.Pos_FeedLine();
     
-    // 8. 分隔线
-    printText('------------------------------------------------------------', TEXT_ENCODING, -1, 1, 1, 0, 0);
+    // 9. 分隔线（根据字号倍数动态计算长度，占满一行）
+    printText(SEPARATOR_LINE, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 9. 打印支付类型和金额
-    printText('                                    支付類型                  支付金額', TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
+    // 10. 打印支付类型（中英文两行，左对齐，标签和值对齐为两列）
+    printerDll.Pos_Align(0); // 左对齐
     printerDll.Pos_FeedLine();
-    printText('                             Payment type      Payment amount', TEXT_ENCODING, -1, 1, 1, 0, 0);
-    printerDll.Pos_FeedLine();
+
+    // 标签列宽（使用显示宽度，考虑中英文混排）
+    const PAY_LABEL_WIDTH = 12;
+    const buildLabelValueLine = (label, value) => {
+      const safeValue = value || '';
+      const labelPart = leftAlign(label, PAY_LABEL_WIDTH);
+      return `${labelPart}  ${safeValue}`;
+    };
+    
+    // 中文：支付類型           微信支付
+    const payTypeZh = truncateText(payment_type_zh || '', 20);
+    const payTypeLineZh = buildLabelValueLine('支付類型', payTypeZh);
+    printText(payTypeLineZh, TRADITIONAL_CHINESE_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    const payTypeZh = payment_type_zh || '';
-    const payTypeEn = payment_type_en || '';
-    const payAmountLineZh = `                          ${payTypeZh}                   $${total_amount}`;
-    printText(payAmountLineZh, TRADITIONAL_CHINESE_ENCODING, -1, 1, 1, 0, 0);
-    printerDll.Pos_FeedLine();
+    // 英文：Payment type      WeChat Pay
+    const payTypeEn = truncateText(payment_type_en || '', 30);
     if (payTypeEn) {
-      const payAmountLineEn = `                      ${payTypeEn}`;
-      printText(payAmountLineEn, TEXT_ENCODING, -1, 1, 1, 0, 0);
+      const payTypeLineEn = buildLabelValueLine('Payment type', payTypeEn);
+      printText(payTypeLineEn, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
       printerDll.Pos_FeedLine();
     }
     
-    // 10. 分隔线
-    printText('──────────────────────────────────', TEXT_ENCODING, -1, 1, 1, 0, 0);
+    // 11. 分隔线
+    printText(SEPARATOR_LINE, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 11. 打印提示信息（居中对齐）
+    // 12. 支付金额一行：支付金額 和 金额在同一行显示，左/右对齐，统一样式（1.5倍字号，加粗）
+    const payAmountText = `HK$${total_amount}`;
+    const payAmountLabel = '支付金額';
+    const labelWidth = getDisplayWidth(payAmountLabel);
+    const amountWidth = getDisplayWidth(payAmountText);
+    const lineTotalWidth = MAX_LINE_WIDTH; // 使用整行最大宽度
+    const spaceWidth = Math.max(1, lineTotalWidth - labelWidth - amountWidth);
+    const payAmountLine = payAmountLabel + ' '.repeat(spaceWidth) + payAmountText;
+    // 整行统一使用繁体中文编码、1.5倍字号并加粗
+    printText(payAmountLine, TRADITIONAL_CHINESE_ENCODING, -1, 1.5, 1.5, 0, 0x08);
+    printerDll.Pos_FeedLine();
+    
+    // 13. 分隔线
+    printText(SEPARATOR_LINE, TEXT_ENCODING, -1, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
+    printerDll.Pos_FeedLine();
+    
+    // 14. 打印提示信息（居中对齐）
     printerDll.Pos_Align(1);
     printerDll.Pos_FeedLine();
-    printText('感謝您的惠顧', TRADITIONAL_CHINESE_ENCODING, -2, 1, 1, 0, 0);
+    printText('感謝您的惠顧', TRADITIONAL_CHINESE_ENCODING, -2, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
-    printText('Thank You!', TEXT_ENCODING, -2, 1, 1, 0, 0);
+    printText('Thank You!', TEXT_ENCODING, -2, NORMAL_SIZE, NORMAL_SIZE, 0, 0);
     printerDll.Pos_FeedLine();
     
-    // 12. 进纸
+    // 15. 进纸
     printerDll.Pos_Feed_N_Line(4);
     
-    // 11. 切纸
+    // 16. 切纸
     try {
       printerDll.Pos_FullCutPaper();
     } catch (error) {
@@ -1015,7 +923,6 @@ async function queryPrinterStatus() {
 
 module.exports = {
   initPrinter,
-  printTicket,
   printOrderReceipt,
   closePrinter,
   queryPrinterStatus,

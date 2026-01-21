@@ -153,7 +153,7 @@ async function migrateDatabase() {
         }
       }
     } else {
-      logger.info('没有需要删除的多余表');
+      // logger.info('没有需要删除的多余表');
     }
     
     // 检查是否存在旧的 orders 表结构
@@ -348,7 +348,7 @@ async function migrateDatabase() {
       } else {
         // 所有表都存在且结构正确，只做快速检查，不执行 sync（提高启动速度）
         // 但仍然需要初始化 settings，确保新增的设置项被创建
-        logger.info('数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步');
+        // logger.info('数据库结构已是最新版本，所有必需表都存在且结构正确，跳过同步');
         const { initSettings } = require('./initSettings');
         await initSettings();
       }

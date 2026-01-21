@@ -4,7 +4,7 @@ const API_URL = '/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 5000
+  timeout: 5000 // 5秒超时，打印操作已改为异步执行，不会阻塞响应
 });
 
 // 订单服务
