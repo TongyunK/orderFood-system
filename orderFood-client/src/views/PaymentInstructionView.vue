@@ -85,17 +85,19 @@ const currentLanguage = ref('zh');
 const storeName = ref('');
 
 // 判断是否为NFC支付方式
+// 银行卡(id=1)和八达通(id=3)使用NFC
 const isNfcPayment = computed(() => {
   if (!paymentMethod.value) return false;
-  const code = paymentMethod.value.code;
-  return ['visa', 'mastercard', 'octopus'].includes(code);
+  const id = paymentMethod.value.id;
+  return id === 1 || id === 3; // 银行卡和八达通
 });
 
 // 判断是否为二维码支付方式
+// 二维码(id=2)、FPS(id=4)、PayMe(id=5)使用二维码
 const isQrcodePayment = computed(() => {
   if (!paymentMethod.value) return false;
-  const code = paymentMethod.value.code;
-  return ['wechat', 'alipay'].includes(code);
+  const id = paymentMethod.value.id;
+  return id === 2 || id === 4 || id === 5; // 二维码、FPS、PayMe
 });
 
 // 获取付款指示图片
