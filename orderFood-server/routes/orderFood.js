@@ -14,4 +14,7 @@ router.get('/payment-methods', orderFoodController.getPaymentMethods);
 // 获取系统设置
 router.get('/settings', orderFoodController.getSettings);
 
+// 更新系统设置
+router.put('/settings', orderFoodController.updateSettings);
+
 module.exports = router;

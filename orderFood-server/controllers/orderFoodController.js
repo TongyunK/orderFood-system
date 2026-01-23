@@ -138,9 +138,48 @@ const getSettings = async (req, res) => {
   }
 };
 
+/**
+ * 更新系统设置
+ */
+const updateSettings = async (req, res) => {
+  try {
+    const { key, value, description } = req.body;
+    
+    if (!key) {
+      return res.status(400).json({ 
+        success: false,
+        message: '设置键名不能为空' 
+      });
+    }
+    
+    if (value === undefined) {
+      return res.status(400).json({ 
+        success: false,
+        message: '设置值不能为空' 
+      });
+    }
+    
+    const setting = await orderFoodService.updateSettings(key, value, description);
+    
+    res.status(200).json({
+      success: true,
+      data: setting,
+      message: '设置更新成功'
+    });
+  } catch (error) {
+    logger.error('更新系统设置失败:', error);
+    res.status(500).json({ 
+      success: false,
+      message: '更新系统设置失败', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getMeals,
   getPaymentMethods,
-  getSettings
+  getSettings,
+  updateSettings
 };

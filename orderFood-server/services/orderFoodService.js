@@ -461,15 +461,28 @@ const getSettings = async (key = null) => {
       }
     } else {
       // 获取所有设置
-      const settings = await Settings.findAll();
+      const settings = await Settings.findAll({
+        order: [['category', 'ASC'], ['key', 'ASC']]
+      });
       
-      const result = {};
+      const result = [];
       for (const setting of settings) {
+        let value;
         try {
-          result[setting.key] = JSON.parse(setting.value);
+          value = JSON.parse(setting.value);
         } catch (e) {
-          result[setting.key] = setting.value;
+          value = setting.value;
         }
+        
+        result.push({
+          id: setting.id,
+          key: setting.key,
+          value: value,
+          description: setting.description,
+          category: setting.category,
+          createdAt: setting.created_at,
+          updatedAt: setting.updated_at
+        });
       }
       
       return result;
@@ -480,9 +493,76 @@ const getSettings = async (key = null) => {
   }
 };
 
+/**
+ * 更新系统设置
+ * @param {string} key - 设置键名
+ * @param {any} value - 设置值
+ * @param {string} description - 设置描述（可选）
+ * @returns {Promise<Object>}
+ */
+const updateSettings = async (key, value, description = null) => {
+  try {
+    const { Settings } = require('../models');
+    
+    if (!key) {
+      throw new Error('设置键名不能为空');
+    }
+    
+    // 将值转换为 JSON 字符串（如果是对象或数组）
+    let valueStr;
+    if (typeof value === 'object' && value !== null) {
+      valueStr = JSON.stringify(value);
+    } else {
+      valueStr = String(value);
+    }
+    
+    // 查找或创建设置项
+    const [setting, created] = await Settings.findOrCreate({
+      where: { key },
+      defaults: {
+        key,
+        value: valueStr,
+        description: description || '',
+        category: 'general'
+      }
+    });
+    
+    if (!created) {
+      // 更新现有设置
+      if (description !== null) {
+        setting.description = description;
+      }
+      setting.value = valueStr;
+      await setting.save();
+    }
+    
+    // 返回更新后的设置
+    let parsedValue;
+    try {
+      parsedValue = JSON.parse(setting.value);
+    } catch (e) {
+      parsedValue = setting.value;
+    }
+    
+    return {
+      id: setting.id,
+      key: setting.key,
+      value: parsedValue,
+      description: setting.description,
+      category: setting.category,
+      createdAt: setting.created_at,
+      updatedAt: setting.updated_at
+    };
+  } catch (error) {
+    logger.error('更新系统设置失败:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   createOrder,
   getMeals,
   getPaymentMethods,
-  getSettings
+  getSettings,
+  updateSettings
 };
